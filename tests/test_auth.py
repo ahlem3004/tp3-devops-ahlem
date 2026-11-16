@@ -87,3 +87,29 @@ def test_successful_login_clears_previous_failed_attempts():
     result = auth.authenticate("alice", "Alice123!Secure")
     assert result["success"] is True
     assert "alice" not in auth.attempts
+
+
+def test_same_password_produces_different_hashes():
+    """Verify that identical passwords produce different hashes."""
+
+    password = "SamePassword123!"
+
+    # Register two users with the same password
+    assert auth.register_user("charlie", password) is True
+    assert auth.register_user("david", password) is True
+
+    # The random salt must produce different stored hashes
+    assert auth.users["charlie"] != auth.users["david"]
+
+
+def test_password_longer_than_128_characters_is_rejected():
+    """Verify that passwords longer than 128 characters are rejected."""
+
+    # Create a password containing 129 characters
+    long_password = "A" * 129
+
+    # Registration must reject the password
+    result = auth.register_user("newuser", long_password)
+
+    assert result is False
+    assert "newuser" not in auth.users
